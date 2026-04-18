@@ -1,22 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'dart:ui_web' as ui;
-import 'dart:html' as html;
+import 'web_view_stub.dart' if (dart.library.html) 'web_view_web.dart';
 
 const _url = 'https://gigweatherwage.vercel.app';
 
 void main() {
-  if (kIsWeb) {
-    ui.platformViewRegistry.registerViewFactory(
-      'gigweatherwage-iframe',
-      (int viewId) => html.IFrameElement()
-        ..src = _url
-        ..style.border = 'none'
-        ..style.width = '100%'
-        ..style.height = '100%',
-    );
-  }
+  if (kIsWeb) registerWebView();
   runApp(const MyApp());
 }
 
@@ -57,7 +47,7 @@ class _MyAppState extends State<MyApp> {
         child: Scaffold(
           body: SafeArea(
             child: kIsWeb
-                ? const HtmlElementView(viewType: 'gigweatherwage-iframe')
+                ? buildWebView()
                 : WebViewWidget(controller: controller),
           ),
         ),
