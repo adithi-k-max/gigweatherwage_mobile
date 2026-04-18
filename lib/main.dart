@@ -1,7 +1,22 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'dart:ui_web' as ui;
+import 'dart:html' as html;
+
+const _url = 'https://gigweatherwage.vercel.app';
 
 void main() {
+  if (kIsWeb) {
+    ui.platformViewRegistry.registerViewFactory(
+      'gigweatherwage-iframe',
+      (int viewId) => html.IFrameElement()
+        ..src = _url
+        ..style.border = 'none'
+        ..style.width = '100%'
+        ..style.height = '100%',
+    );
+  }
   runApp(const MyApp());
 }
 
@@ -18,27 +33,15 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-
-    controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            print('Page started loading: $url');
-          },
-          onPageFinished: (String url) {
-            print('Page finished loading: $url');
-          },
-          onWebResourceError: (WebResourceError error) {
-            print('Web resource error: ${error.description}');
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('https://gigweatherwage.vercel.app'));
+    if (!kIsWeb) {
+      controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..loadRequest(Uri.parse(_url));
+    }
   }
 
   Future<bool> _onWillPop() async {
-    if (await controller.canGoBack()) {
+    if (!kIsWeb && await controller.canGoBack()) {
       controller.goBack();
       return false;
     }
@@ -53,7 +56,9 @@ class _MyAppState extends State<MyApp> {
         onWillPop: _onWillPop,
         child: Scaffold(
           body: SafeArea(
-            child: WebViewWidget(controller: controller),
+            child: kIsWeb
+                ? const HtmlElementView(viewType: 'gigweatherwage-iframe')
+                : WebViewWidget(controller: controller),
           ),
         ),
       ),
